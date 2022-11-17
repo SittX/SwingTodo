@@ -210,6 +210,23 @@
                   </component>
                 </children>
               </grid>
+              <grid id="ce8a8" binding="multithreadingPanel" layout-manager="CardLayout" hgap="0" vgap="0">
+                <constraints>
+                  <tabbedpane title="Multithread"/>
+                </constraints>
+                <properties/>
+                <border type="none"/>
+                <children>
+                  <component id="f655a" class="javax.swing.JButton" binding="multithreadBtn">
+                    <constraints>
+                      <card name="Card1"/>
+                    </constraints>
+                    <properties>
+                      <text value="Start Multithreading"/>
+                    </properties>
+                  </component>
+                </children>
+              </grid>
             </children>
           </tabbedpane>
         </children>

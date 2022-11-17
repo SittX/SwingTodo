@@ -2,12 +2,15 @@ package org.example;
 
 import javax.swing.*;
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 public class MainGUI extends JFrame {
-    public String database = "SwingTodo";
-    public String url = "jdbc:mysql://localhost:3306/" + database;
-    public String user = "root";
-    public String psw = "kstmysql";
+    private final String database = "SwingTodo";
+    private final String url = "jdbc:mysql://localhost:3306/" + database;
+    private final String user = "root";
+    private final String psw = "kstmysql";
     private JPanel mainPanel;
     private JPanel topPanel;
     private JPanel leftPanel;
@@ -29,6 +32,8 @@ public class MainGUI extends JFrame {
     private JPanel createTaskPanel;
     private JTextField oldTaskTitleTxtField;
     private JTextField newTaskTitleTxtField;
+    private JPanel multithreadingPanel;
+    private JButton multithreadBtn;
 
     public MainGUI() {
         populateComboBox();
@@ -79,13 +84,62 @@ public class MainGUI extends JFrame {
                 }
         );
 
+        multithreadBtn.addActionListener(e -> {
+
+            List<Employee> employeeList = Collections.synchronizedList(new ArrayList<>());
+
+            Thread fetchingThread = new Thread(() -> {
+                System.out.println("Current Thread " + Thread.currentThread().getName());
+                Multithread obj = new Multithread();
+                obj.fetchUser(employeeList);
+
+            });
+
+            Thread serializingThread = new Thread(() -> {
+                System.out.println("Current Thread " + Thread.currentThread().getName());
+
+                Multithread obj = new Multithread();
+                obj.serialize(employeeList);
+            });
+
+            Thread deserializingThread = new Thread(() -> {
+                System.out.println("Current Thread " + Thread.currentThread().getName());
+                Multithread obj = new Multithread();
+                obj.deserialize(employeeList);
+            });
+
+            Thread mainThread = new Thread(()->{
+            System.out.println("Thread before starting fetchingThread " + Thread.currentThread().getName());
+            fetchingThread.start();
+            try {
+                fetchingThread.join();
+            } catch (InterruptedException ex) {
+                throw new RuntimeException(ex);
+            }
+
+            System.out.println("Thread before starting serializing thread " + Thread.currentThread().getName());
+            serializingThread.start();
+
+            try {
+                serializingThread.join();
+            } catch (InterruptedException ex) {
+                throw new RuntimeException(ex);
+            }
+
+            System.out.println("Thread before starting deserializing thread " + Thread.currentThread().getName());
+            deserializingThread.start();
+            });
+
+            mainThread.start();
+            System.out.println("Thread after all the threads died " + Thread.currentThread().getName());
+        });
         super.setSize(500, 500);
         super.setDefaultCloseOperation(EXIT_ON_CLOSE);
         super.setContentPane(mainPanel);
         super.setVisible(true);
     }
 
-    private void delete(String title) {
+    public void delete(String title) {
         try (Connection con = DriverManager.getConnection(url, user, psw);
              PreparedStatement stat = con.prepareStatement("DELETE FROM Tasks t WHERE t.title = ?")
         ) {
@@ -97,7 +151,7 @@ public class MainGUI extends JFrame {
         }
     }
 
-    public void populateComboBox() {
+    private void populateComboBox() {
         taskPriorityCmb.addItem(new TaskPriority(Priority.VERY_EASY));
         taskPriorityCmb.addItem(new TaskPriority(Priority.EASY));
         taskPriorityCmb.addItem(new TaskPriority(Priority.MEDIUM));
