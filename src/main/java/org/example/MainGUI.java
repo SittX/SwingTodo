@@ -84,10 +84,13 @@ public class MainGUI extends JFrame {
                 }
         );
 
+        // This action has multithreading features and it is really important
         multithreadBtn.addActionListener(e -> {
 
+            // Create a thread-safe synchronizedList
             List<Employee> employeeList = Collections.synchronizedList(new ArrayList<>());
 
+            // Create threads for each process ( Fetching, Serializing, Deserializing )
             Thread fetchingThread = new Thread(() -> {
                 System.out.println("Current Thread " + Thread.currentThread().getName());
                 Multithread obj = new Multithread();
@@ -97,7 +100,6 @@ public class MainGUI extends JFrame {
 
             Thread serializingThread = new Thread(() -> {
                 System.out.println("Current Thread " + Thread.currentThread().getName());
-
                 Multithread obj = new Multithread();
                 obj.serialize(employeeList);
             });
@@ -108,8 +110,13 @@ public class MainGUI extends JFrame {
                 obj.deserialize(employeeList);
             });
 
+            // This is main thread for managing all the above 3 threads
+            // If we don't create this main thread, the above 3 threads will be managed by the program's main thread, and they will not be in multithreading mode since each thread depends on each other.
+            // The program will be halted and unresponsive while executing those threads.
+            // To avoid this , we create a new parent thread that will manage those 3 threads.
+            // The new parent thread will be managed by main thread.
+            // This allows the program's main thread to be free after starting the mainThread.
             Thread mainThread = new Thread(()->{
-            System.out.println("Thread before starting fetchingThread " + Thread.currentThread().getName());
             fetchingThread.start();
             try {
                 fetchingThread.join();
